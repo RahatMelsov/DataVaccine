@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { Tab } from 'semantic-ui-react'
+import { Tab, Card, Segment } from 'semantic-ui-react'
 import { Button, Image, List } from 'semantic-ui-react'
 import MyComponent from './values/cases'
-import Vaccine from './values/vaccine'
+import useWindowDimensions from './windowSize'
 import moment from 'moment'
+import Poginations from './values/Paginations'
 
 
 function MyComponents() {
@@ -15,12 +16,13 @@ function MyComponents() {
 
 
     useEffect(() => {
-        fetch("https://disease.sh/v3/covid-19/countries")
-            .then(res => res.json())
-            .then(
-                (result) => {
+        Promise.all([
+            fetch("https://disease.sh/v3/covid-19/countries").then(res => res.json()),
+            fetch("https://disease.sh/v3/covid-19/vaccine/coverage/countries?lastdays=30&fullData=false").then(res => res.json())
+        ]).then(
+                ([cases, vaccine]) => {
+                    setItems([cases, vaccine]);
                     setIsLoaded(true);
-                    setItems(result);
                 },
                 (error) => {
                     setIsLoaded(true);
@@ -29,21 +31,60 @@ function MyComponents() {
             )
     }, [])
 
-    const panes = [
-        { menuItem: 'cases', render: () => <div> < MyComponent toDay={toDay} items={items} tab={'cases'} tabToDay={['items cases Per One Million', "casesPerOneMillion"]} /> </div> },
-        { menuItem: 'deaths', render: () => <div> < MyComponent toDay={toDay} items={items} tab={'deaths'} tabToDay={['deaths Per One Million', "deathsPerOneMillion"]} population={'population'} /> </div> },
-        { menuItem: 'recovered', render: () => <div> < MyComponent toDay={toDay} items={items} tab={'recovered'} tabToDay={['recovered Per One Million', "recoveredPerOneMillion"]} /> </div> },
-        { menuItem: 'vaccine', render: () => <div> < Vaccine toDay={toDay} items={items} /> </div> }
-    ]
+    let pageElements = 0;
+    let pagesCount;
+    const { height, width } = useWindowDimensions();
+    if (width > 1203) {
+        pageElements = 8;
+    } else if (width > 915) {
+        pageElements = 6;
+    } else if (width > 611) {
+        pageElements = 4;
+    } else {
+        pageElements = 2;
+    }
+
+    
+    const [currentPage, setCurrentPage] = useState(1)
+    const [postsPerPage] = useState(pageElements)
+    
 
     if (error) {
         return <div>Ошибка: {error.message}</div>;
     } else if (!isLoaded) {
         return <div>Загрузка...</div>;
     } else {
+    
+        const indexOfLastPost = currentPage * postsPerPage;
+        const indexOfFirstPost = indexOfLastPost - postsPerPage;
+        console.log(items)
+        const currentPosts = items[0].slice(indexOfFirstPost, indexOfLastPost);
+
+        const paginate = (number) => setCurrentPage(number)
+
+        const panes = [
+            { menuItem: 'cases', render: () => <div> < MyComponent toDay={toDay} 
+            items={currentPosts}
+            totalSize = {items[0]}
+            vaccine={items[1]} 
+            cases={'cases'}
+            deaths = {'deaths'}
+            reverenge={'recovered'}
+            tabToDay={['items cases Per One Million', "casesPerOneMillion"]} 
+            population={'population'}/> 
+            </div> },
+        ]
+
         return (
             <div>
                 <List><Tab panes={panes}></Tab></List>
+                <Card.Group>
+                <Card fluid>
+                    <Segment>
+                        < Poginations totalPosts={items[0].length} postsPerPage={postsPerPage} paginate={paginate}/>
+                    </Segment>
+                </Card>
+                </Card.Group>
             </div>
         );
     }

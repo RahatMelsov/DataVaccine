@@ -1,0 +1,20 @@
+img.ui.image {
+    height: 150px;
+}
+
+.ui.tiny.statistic>.value, .ui.tiny.statistics .statistic>.value {
+    height: 60px;
+}
+
+.ui .button:hover {
+    cursor: pointer	;
+}
+
+.ui.menu.fluid, .ui.vertical.menu.fluid {
+    align-items: center;
+    justify-content: center;
+}
+
+.ui .segment {
+    height:  71px;
+}

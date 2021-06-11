@@ -1,6 +1,7 @@
 import './App.css';
 import MyComponents from './components/informationCovid'
 import React from 'react'
+
 function App() {
 
   return (
